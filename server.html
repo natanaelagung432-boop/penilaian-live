@@ -88,7 +88,10 @@ button:active{transform:scale(.97)}
 </section>
 
 <section class="panel">
-<div class="title">Penilaian</div>
+<div class="title" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+  <span>Penilaian</span>
+  <button class="danger" id="resetScores">↺ Reset Semua Skor</button>
+</div>
 <div class="sub" style="margin-bottom:12px">Setiap baris adalah peserta. Kolom menunjukkan ronde. Total berada di paling kanan.</div>
 <div style="overflow-x:auto">
 <table class="score-table">
@@ -233,6 +236,27 @@ $("addParticipant").onclick=async()=>{
   }catch(e){showError(e)}
 };
 
+$("resetScores").onclick=async()=>{
+  const yakin=confirm(
+    "RESET SEMUA SKOR?\n\n"+
+    "Semua skor dari SEMUA peserta dan SEMUA ronde akan kembali ke 0.\n"+
+    "Nama peserta, ronde, dan setting tombol tidak akan dihapus.\n\n"+
+    "Lanjutkan?"
+  );
+  if(!yakin)return;
+
+  const yakin2=confirm(
+    "Konfirmasi terakhir: semua skor akan dihapus.\n\n"+
+    "Tekan OK untuk RESET."
+  );
+  if(!yakin2)return;
+
+  try{
+    await set(ref(db,"competition/scores"),null);
+    $("errorBox").style.display="none";
+  }catch(e){showError(e)}
+};
+
 function renderRounds(){
   const box=$("roundList"); box.innerHTML="";
   Object.entries(rounds).sort((a,b)=>(a[1].order||0)-(b[1].order||0)).forEach(([id,r])=>{
@@ -335,20 +359,6 @@ async function saveName(pid){
   }catch(e){showError(e)}
 }
 
-
-async function changeScore(id,delta){
-  try{
-    if(!activeRoundId){
-      alert("Pilih atau buat ronde terlebih dahulu.");
-      return;
-    }
-    const r=ref(db,`competition/scores/${activeRoundId}/${id}`);
-    await runTransaction(r,current=>{
-      const n=Number(current||0)+delta;
-      return Math.max(0,n);
-    });
-  }catch(e){showError(e)}
-}
 
 
 function showError(e){
